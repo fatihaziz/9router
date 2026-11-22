@@ -11,6 +11,7 @@
     "hooks",
     "app",
     "README.md",
+    "secretspec.toml",
     "LICENSE"
   ],
   "scripts": {

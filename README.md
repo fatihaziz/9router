@@ -639,6 +639,39 @@ Seamless translation between formats:
 - Name your combos for easy access
 - Share combos across devices with Cloud Sync
 
+#### JEV post-panel evaluation (local fork)
+
+Set a fusion combo's `judgeModel` to `typesafe/jev-latest` and its models to:
+
+```json
+["cx/gpt-5.6-sol(medium)", "cx/gpt-5.6-luna(max)", "ag/gemini-3.8-flash-medium"]
+```
+
+All three models produce proposals before TypeSafe evaluates each proposal.
+Among proposals rated usable with confidence at least 0.5, the highest DeepSWE
+v1.1 model/effort score wins: Gemini medium 71%, Luna max 67%, Sol medium 61%.
+If none qualifies, Astra medium (73%) resolves the request instead. These are
+benchmark priors, not per-answer correctness probabilities. Scores and their
+source are in `open-sse/config/jevFusion.js`.
+
+The selected model makes the final response using the reviewed proposal and the
+original tools and streaming mode. Thus a successful request uses three panel
+calls, one JEV evaluation, and one final model call. JEV does not generate text.
+Missing panel responses return 503; a failed or malformed JEV evaluation returns
+502. Neither condition silently bypasses evaluation or triggers Astra.
+
+Store `TYPESAFE_API_KEY` through `cli/secretspec.toml`, then launch with:
+
+```sh
+secretspec set TYPESAFE_API_KEY --file cli/secretspec.toml --provider keyring
+secretspec run --file cli/secretspec.toml --provider keyring --reason "Run JEV fusion" -- bun run start
+```
+
+The TypeSafe request includes the conversation and panel text. Never put the
+TypeSafe key in combo settings. The packaged CLI starts the server through
+SecretSpec automatically when no TypeSafe key is already injected, so Foyer
+restarts retain access to the OS-keyring credential.
+
 ### 📝 Request Logging
 
 - Enable debug mode for full request/response logs
